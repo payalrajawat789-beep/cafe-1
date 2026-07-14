@@ -59,4 +59,6 @@
 |---------------------------|----------------------------------------------------------------------------------------------------------------|
 | JWT_SECRET                | your_jwt_token_signing_secret_key                                                                              |
 | SESSION_SECRET            | a_secure_random_session_secret_passphrase                                                                      |
+| ADMIN_USER                | admin (Default fallback: admin if not defined)                                                                 |
+| ADMIN_PASS                | brewbliss2026 (Default fallback: brewbliss2026 if not defined)                                                 |
 
