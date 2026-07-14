@@ -616,7 +616,7 @@
             // Fill Subscribers table
             renderSubscribersTable(data.subscribers);
           } else {
-            showErrorMessage(data.message || 'Error loading dashboard data');
+            showErrorMessage((data.message || 'Error loading dashboard data') + ' | Detail: ' + (data.error || 'No detail available'));
           }
         } catch (error) {
           console.error('Error fetching admin data:', error);
