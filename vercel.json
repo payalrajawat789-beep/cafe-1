@@ -1,6 +1,7 @@
 {
   "version": 2,
   "name": "brew-and-bliss-cafe",
+  "outputDirectory": "public",
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/$1" }
   ]
