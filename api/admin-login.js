@@ -19,8 +19,8 @@ module.exports = async (req, res) => {
     const { username, password } = req.body;
 
     // Fetch credentials from env or use secure defaults
-    const expectedUsername = process.env.ADMIN_USER || 'admin';
-    const expectedPassword = process.env.ADMIN_PASS || 'brewbliss2026';
+    const expectedUsername = process.env.ADMIN_USER || 'payalrajawat789@gmail.com';
+    const expectedPassword = process.env.ADMIN_PASS || 'Payal123#';
 
     if (username === expectedUsername && password === expectedPassword) {
       // Simulating a session token (in production, use JWT or iron-session)
