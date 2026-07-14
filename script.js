@@ -219,13 +219,19 @@ function renderMenuCards(filter = 'all') {
   // Cart button events
   grid.querySelectorAll('.btn-cart').forEach(btn => {
     btn.addEventListener('click', function () {
+      const itemId = this.dataset.id;
+      if (typeof addToCart === 'function') {
+        addToCart(itemId);
+      }
+      
       if (this.classList.contains('added')) return;
       this.classList.add('added');
+      const originalHTML = this.innerHTML;
       this.innerHTML = '<i class="fa-solid fa-check"></i> Added!';
       setTimeout(() => {
         this.classList.remove('added');
-        this.innerHTML = '<i class="fa-solid fa-cart-plus"></i> Add to Cart';
-      }, 1800);
+        this.innerHTML = originalHTML;
+      }, 1500);
     });
   });
 }
@@ -572,6 +578,426 @@ document.addEventListener('DOMContentLoaded', initMenuQR);
 if (document.readyState === 'complete' || document.readyState === 'interactive') {
   initMenuQR();
 }
+
+
+/* ============================================================
+   17. SHOPPING CART & PAYMENT WIZARD SYSTEM
+   ============================================================ */
+let cart = [];
+
+// Load cart from localStorage on init
+function loadCart() {
+  const savedCart = localStorage.getItem('bb_cafe_cart');
+  if (savedCart) {
+    try {
+      cart = JSON.parse(savedCart);
+      updateCartUI();
+    } catch (e) {
+      cart = [];
+    }
+  }
+}
+
+function saveCart() {
+  localStorage.setItem('bb_cafe_cart', JSON.stringify(cart));
+}
+
+// Add item to cart
+function addToCart(itemId) {
+  const item = menuItems.find(i => i.id === itemId);
+  if (!item) return;
+
+  const existing = cart.find(i => i.id === itemId);
+  if (existing) {
+    existing.qty += 1;
+  } else {
+    cart.push({
+      id: item.id,
+      name: item.name,
+      price: item.price,
+      img: item.img,
+      qty: 1
+    });
+  }
+  
+  saveCart();
+  updateCartUI();
+  
+  // Shake cart badge on navbar for visual delight
+  const badge = document.getElementById('cart-badge');
+  if (badge) {
+    badge.classList.remove('shake-anim');
+    void badge.offsetWidth; // Reflow
+    badge.classList.add('shake-anim');
+  }
+}
+
+// Update quantities in cart
+function updateQty(itemId, change) {
+  const item = cart.find(i => i.id === itemId);
+  if (!item) return;
+
+  item.qty += change;
+  if (item.qty <= 0) {
+    cart = cart.filter(i => i.id !== itemId);
+  }
+  
+  saveCart();
+  updateCartUI();
+}
+
+// Remove item from cart
+function removeFromCart(itemId) {
+  cart = cart.filter(i => i.id !== itemId);
+  saveCart();
+  updateCartUI();
+}
+
+// Update Cart Badge, Totals, list rendering
+function updateCartUI() {
+  const badge = document.getElementById('cart-badge');
+  const countSpan = document.getElementById('cart-count');
+  const itemsContainer = document.getElementById('cart-items-container');
+  const subtotalSpan = document.getElementById('cart-subtotal');
+  const taxSpan = document.getElementById('cart-tax');
+  const totalSpan = document.getElementById('cart-total');
+  const checkoutBtn = document.getElementById('checkout-btn');
+
+  const totalItemsCount = cart.reduce((sum, item) => sum + item.qty, 0);
+
+  // Update badges
+  if (badge) badge.textContent = totalItemsCount;
+  if (countSpan) countSpan.textContent = totalItemsCount;
+
+  if (cart.length === 0) {
+    if (itemsContainer) {
+      itemsContainer.innerHTML = `
+        <div class="empty-cart-message">
+          <i class="fa-solid fa-basket-shopping"></i>
+          <p>Your cart is empty.</p>
+          <a href="#menu" class="btn btn-outline btn-sm ripple" id="start-shopping">Start Ordering</a>
+        </div>
+      `;
+      // Re-bind click event to close cart drawer when starting shopping
+      document.getElementById('start-shopping')?.addEventListener('click', () => {
+        toggleCartDrawer(false);
+      });
+    }
+    if (subtotalSpan) subtotalSpan.textContent = '₹0';
+    if (taxSpan) taxSpan.textContent = '₹0';
+    if (totalSpan) totalSpan.textContent = '₹0';
+    if (checkoutBtn) {
+      checkoutBtn.disabled = true;
+      checkoutBtn.innerHTML = '<i class="fa-solid fa-credit-card"></i> Proceed to Pay';
+    }
+    return;
+  }
+
+  // Render items list
+  if (itemsContainer) {
+    itemsContainer.innerHTML = '';
+    cart.forEach(item => {
+      const row = document.createElement('div');
+      row.className = 'cart-item';
+      row.innerHTML = `
+        <div class="cart-item-details">
+          <img src="${item.img}" alt="${item.name}" class="cart-item-img" />
+          <div class="cart-item-info">
+            <h4>${item.name}</h4>
+            <p>₹${item.price}</p>
+          </div>
+        </div>
+        <div class="cart-item-actions">
+          <div class="qty-controls">
+            <button class="qty-btn" onclick="updateQty('${item.id}', -1)"><i class="fa-solid fa-minus"></i></button>
+            <span class="qty-val">${item.qty}</span>
+            <button class="qty-btn" onclick="updateQty('${item.id}', 1)"><i class="fa-solid fa-plus"></i></button>
+          </div>
+          <button class="cart-item-remove" onclick="removeFromCart('${item.id}')" aria-label="Remove item"><i class="fa-solid fa-trash-can"></i></button>
+        </div>
+      `;
+      itemsContainer.appendChild(row);
+    });
+  }
+
+  // Calculate pricing
+  const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+  const tax = Math.round(subtotal * 0.18); // 18% GST
+  const total = subtotal + tax;
+
+  if (subtotalSpan) subtotalSpan.textContent = `₹${subtotal}`;
+  if (taxSpan) taxSpan.textContent = `₹${tax}`;
+  if (totalSpan) totalSpan.textContent = `₹${total}`;
+  
+  if (checkoutBtn) {
+    checkoutBtn.disabled = false;
+    checkoutBtn.innerHTML = `<i class="fa-solid fa-credit-card"></i> Pay ₹${total}`;
+  }
+
+  // Sync with checkout totals
+  document.querySelectorAll('.payment-total-amount').forEach(el => {
+    el.textContent = `₹${total}`;
+  });
+}
+
+// Bind to window to allow onclick handler from dynamically generated HTML
+window.updateQty = updateQty;
+window.removeFromCart = removeFromCart;
+
+// Toggle Cart Drawer
+function toggleCartDrawer(show) {
+  const drawer = document.getElementById('cart-drawer');
+  if (!drawer) return;
+  
+  if (show) {
+    drawer.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  } else {
+    drawer.classList.remove('open');
+    if (!document.getElementById('payment-modal').classList.contains('open') && 
+        !document.getElementById('order-success-screen').classList.contains('open')) {
+      document.body.style.overflow = '';
+    }
+  }
+}
+
+// Checkout and Payment Modals control
+function togglePaymentModal(show) {
+  const modal = document.getElementById('payment-modal');
+  if (!modal) return;
+  
+  if (show) {
+    // Generate UPI QR code based on actual totals
+    const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+    const tax = Math.round(subtotal * 0.18);
+    const total = subtotal + tax;
+    
+    // Simulate dynamic UPI QR payload (merchant id & payload details)
+    const upiPayload = `upi://pay?pa=brewandbliss@ybl&pn=BrewAndBlissCafe&am=${total}&cu=INR&tn=TableOrder_BB`;
+    const qrImg = document.getElementById('upi-qr-img');
+    if (qrImg) {
+      qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(upiPayload)}`;
+    }
+    
+    modal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    startUPITimer();
+  } else {
+    modal.classList.remove('open');
+    document.body.style.overflow = '';
+    stopUPITimer();
+  }
+}
+
+// Payment Tabs switcher
+document.querySelectorAll('.payment-tab').forEach(tab => {
+  tab.addEventListener('click', function() {
+    document.querySelectorAll('.payment-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.payment-form').forEach(f => f.classList.remove('active'));
+
+    this.classList.add('active');
+    const method = this.dataset.method;
+    
+    if (method === 'card') {
+      document.getElementById('card-payment-form').classList.add('active');
+    } else if (method === 'upi') {
+      document.getElementById('upi-payment-form').classList.add('active');
+    } else if (method === 'cod') {
+      document.getElementById('cod-payment-form').classList.add('active');
+    }
+  });
+});
+
+// UPI Countdown Timer
+let upiTimerInterval;
+function startUPITimer() {
+  const countdownSpan = document.getElementById('upi-countdown');
+  if (!countdownSpan) return;
+  
+  let duration = 300; // 5 minutes
+  clearInterval(upiTimerInterval);
+  
+  upiTimerInterval = setInterval(() => {
+    const minutes = Math.floor(duration / 60);
+    const seconds = duration % 60;
+    countdownSpan.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    
+    if (--duration < 0) {
+      clearInterval(upiTimerInterval);
+      countdownSpan.textContent = 'Expired';
+      alert('QR Code Expired. Please reload or select another payment method.');
+    }
+  }, 1000);
+}
+
+function stopUPITimer() {
+  clearInterval(upiTimerInterval);
+}
+
+// Simulator Card Key-in bindings
+const cardNumInput = document.getElementById('card-num');
+const cardExpiryInput = document.getElementById('card-expiry');
+const cardHolderInput = document.getElementById('card-holder');
+
+if (cardNumInput) {
+  cardNumInput.addEventListener('input', function(e) {
+    let val = e.target.value.replace(/\D/g, '');
+    let formatted = val.match(/.{1,4}/g);
+    e.target.value = formatted ? formatted.join(' ') : val;
+    document.querySelector('.card-number-display').textContent = e.target.value || '•••• •••• •••• ••••';
+  });
+}
+
+if (cardExpiryInput) {
+  cardExpiryInput.addEventListener('input', function(e) {
+    let val = e.target.value.replace(/\D/g, '');
+    if (val.length >= 2) {
+      e.target.value = val.slice(0, 2) + '/' + val.slice(2, 4);
+    } else {
+      e.target.value = val;
+    }
+    document.querySelector('.card-expiry-display').textContent = e.target.value || 'MM/YY';
+  });
+}
+
+if (cardHolderInput) {
+  cardHolderInput.addEventListener('input', function(e) {
+    document.querySelector('.card-name-display').textContent = e.target.value.toUpperCase() || 'CARDHOLDER NAME';
+  });
+}
+
+// Complete Order Process & Show Receipt
+function completeCheckoutProcess(paymentMethod) {
+  const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
+  const tax = Math.round(subtotal * 0.18);
+  const total = subtotal + tax;
+  
+  // Generate random order id
+  const orderId = '#BB-' + Math.floor(100000 + Math.random() * 900000);
+  
+  // Fill Receipt details
+  document.getElementById('receipt-order-id').textContent = orderId;
+  
+  const now = new Date();
+  document.getElementById('receipt-date-time').textContent = now.toLocaleString();
+  
+  const receiptItemsList = document.getElementById('receipt-items-list');
+  if (receiptItemsList) {
+    receiptItemsList.innerHTML = '';
+    cart.forEach(item => {
+      const itemRow = document.createElement('div');
+      itemRow.className = 'receipt-item-row';
+      itemRow.innerHTML = `
+        <span>${item.name} x${item.qty}</span>
+        <span>₹${item.price * item.qty}</span>
+      `;
+      receiptItemsList.appendChild(itemRow);
+    });
+  }
+
+  document.getElementById('receipt-subtotal').textContent = `₹${subtotal}`;
+  document.getElementById('receipt-tax').textContent = `₹${tax}`;
+  document.getElementById('receipt-total').textContent = `₹${total}`;
+
+  // Hide Payment Modal & open Success modal
+  togglePaymentModal(false);
+  
+  const successScreen = document.getElementById('order-success-screen');
+  if (successScreen) {
+    successScreen.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  // Clear Cart
+  cart = [];
+  saveCart();
+  updateCartUI();
+}
+
+// Form Submission handlers
+document.getElementById('card-payment-form')?.addEventListener('submit', function(e) {
+  e.preventDefault();
+  const payBtn = this.querySelector('button[type="submit"]');
+  payBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Authorizing...';
+  payBtn.disabled = true;
+  
+  setTimeout(() => {
+    payBtn.innerHTML = '<i class="fa-solid fa-circle-check"></i> Paid';
+    setTimeout(() => {
+      completeCheckoutProcess('card');
+      // Reset form
+      document.getElementById('card-payment-form').reset();
+      document.querySelector('.card-number-display').textContent = '•••• •••• •••• ••••';
+      document.querySelector('.card-expiry-display').textContent = 'MM/YY';
+      document.querySelector('.card-name-display').textContent = 'CARDHOLDER NAME';
+      payBtn.disabled = false;
+    }, 800);
+  }, 1800);
+});
+
+document.getElementById('verify-upi-btn')?.addEventListener('click', function() {
+  this.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Verifying...';
+  this.disabled = true;
+  setTimeout(() => {
+    this.innerHTML = '<i class="fa-solid fa-circle-check"></i> Verified';
+    setTimeout(() => {
+      completeCheckoutProcess('upi');
+      this.disabled = false;
+      this.innerHTML = '<i class="fa-solid fa-circle-check"></i> I have paid';
+    }, 800);
+  }, 1500);
+});
+
+document.getElementById('confirm-cod-btn')?.addEventListener('click', function() {
+  this.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Placing Order...';
+  this.disabled = true;
+  setTimeout(() => {
+    completeCheckoutProcess('counter');
+    this.disabled = false;
+    this.innerHTML = '<i class="fa-solid fa-utensils"></i> Confirm Order';
+  }, 1200);
+});
+
+// Print Receipt Sim
+document.getElementById('print-receipt-btn')?.addEventListener('click', () => {
+  window.print();
+});
+
+// Close Success Modal
+document.getElementById('close-success-btn')?.addEventListener('click', () => {
+  document.getElementById('order-success-screen').classList.remove('open');
+  document.body.style.overflow = '';
+});
+
+// Event listeners for Drawer Toggling
+document.getElementById('nav-cart-trigger')?.addEventListener('click', () => toggleCartDrawer(true));
+document.getElementById('cart-close')?.addEventListener('click', () => toggleCartDrawer(false));
+document.getElementById('cart-overlay')?.addEventListener('click', () => toggleCartDrawer(false));
+
+document.getElementById('checkout-btn')?.addEventListener('click', () => {
+  toggleCartDrawer(false);
+  togglePaymentModal(true);
+});
+
+document.getElementById('payment-close')?.addEventListener('click', () => togglePaymentModal(false));
+document.getElementById('payment-overlay')?.addEventListener('click', () => togglePaymentModal(false));
+
+// Load Cart on load
+loadCart();
+
+// CSS injection for cart animations
+const badgeShakeStyle = document.createElement('style');
+badgeShakeStyle.textContent = `
+  @keyframes shakeBadge {
+    0%, 100% { transform: scale(1); }
+    20%, 60% { transform: scale(1.3) rotate(-10deg); }
+    40%, 80% { transform: scale(1.3) rotate(10deg); }
+  }
+  .shake-anim {
+    animation: shakeBadge 0.6s ease;
+  }
+`;
+document.head.appendChild(badgeShakeStyle);
 
 /* ============================================================
    DONE — Brew & Bliss Café script loaded successfully
