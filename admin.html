@@ -452,6 +452,7 @@
               <thead>
                 <tr>
                   <th>Order ID</th>
+                  <th>Date & Time</th>
                   <th>Table</th>
                   <th>Items Details</th>
                   <th>Total</th>
@@ -461,7 +462,7 @@
                 </tr>
               </thead>
               <tbody id="orders-table-body">
-                <tr><td colspan="7" class="text-center">Loading orders...</td></tr>
+                <tr><td colspan="9" class="text-center">Loading orders...</td></tr>
               </tbody>
             </table>
           </div>
@@ -623,7 +624,7 @@
       function renderOrdersTable(orders) {
         const tbody = document.getElementById('orders-table-body');
         if (orders.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="7" class="text-center">No orders found.</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="9" class="text-center">No orders found.</td></tr>';
           return;
         }
 
@@ -638,6 +639,7 @@
             itemsListHtml = 'Invalid items format';
           }
 
+          const formattedDate = order.created_at ? new Date(order.created_at).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : 'N/A';
           const tr = document.createElement('tr');
           
           // Action Buttons based on status
@@ -655,6 +657,7 @@
 
           tr.innerHTML = `
             <td><strong>#BB-${order.id}</strong></td>
+            <td>${formattedDate}</td>
             <td>${order.table_num}</td>
             <td class="items-list">${itemsListHtml}</td>
             <td class="gold">₹${order.total}</td>
@@ -675,7 +678,13 @@
 
         tbody.innerHTML = '';
         bookings.forEach(booking => {
-          const formattedDate = new Date(booking.date).toLocaleDateString();
+          // Format date timezone-safely, splitting standard ISO timestamp if returned from server
+          let rawDate = booking.date;
+          if (rawDate && rawDate.includes('T')) {
+            rawDate = rawDate.split('T')[0];
+          }
+          const formattedDate = rawDate ? new Date(rawDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A';
+          
           const tr = document.createElement('tr');
           
           // Actions
