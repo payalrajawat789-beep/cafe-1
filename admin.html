@@ -615,10 +615,23 @@
             renderBookingsTable(data.reservations);
             // Fill Subscribers table
             renderSubscribersTable(data.subscribers);
+          } else {
+            showErrorMessage(data.message || 'Error loading dashboard data');
           }
         } catch (error) {
           console.error('Error fetching admin data:', error);
+          showErrorMessage('Database error. Make sure you initialized the database by visiting: /api/setup');
         }
+      }
+
+      function showErrorMessage(msg) {
+        const errorOrdersHtml = `<tr><td colspan="9" class="text-center" style="color: #ff6b6b; padding: 2rem;"><i class="fa-solid fa-triangle-exclamation"></i> ${msg}</td></tr>`;
+        const errorBookingsHtml = `<tr><td colspan="7" class="text-center" style="color: #ff6b6b; padding: 2rem;"><i class="fa-solid fa-triangle-exclamation"></i> ${msg}</td></tr>`;
+        const errorNewsHtml = `<tr><td colspan="3" class="text-center" style="color: #ff6b6b; padding: 2rem;"><i class="fa-solid fa-triangle-exclamation"></i> ${msg}</td></tr>`;
+        
+        document.getElementById('orders-table-body').innerHTML = errorOrdersHtml;
+        document.getElementById('bookings-table-body').innerHTML = errorBookingsHtml;
+        document.getElementById('newsletter-table-body').innerHTML = errorNewsHtml;
       }
 
       function renderOrdersTable(orders) {
