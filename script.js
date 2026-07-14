@@ -867,13 +867,43 @@ if (cardHolderInput) {
 }
 
 // Complete Order Process & Show Receipt
-function completeCheckoutProcess(paymentMethod) {
+async function completeCheckoutProcess(paymentMethod) {
   const subtotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
   const tax = Math.round(subtotal * 0.18);
   const total = subtotal + tax;
   
-  // Generate random order id
-  const orderId = '#BB-' + Math.floor(100000 + Math.random() * 900000);
+  const itemsPayload = cart.map(i => ({
+    name: i.name,
+    qty: i.qty,
+    price: i.price
+  }));
+  
+  const table_num = 'Table #05';
+  let orderId = '';
+
+  try {
+    const response = await fetch('/api/order', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        table_num,
+        items: itemsPayload,
+        subtotal,
+        tax,
+        total,
+        payment_method: paymentMethod
+      })
+    });
+    const data = await response.json();
+    if (data.success && data.order) {
+      orderId = `#BB-${data.order.id}`;
+    } else {
+      orderId = '#BB-' + Math.floor(100000 + Math.random() * 900000);
+    }
+  } catch (error) {
+    console.error('Failed to post order to database:', error);
+    orderId = '#BB-' + Math.floor(100000 + Math.random() * 900000);
+  }
   
   // Fill Receipt details
   document.getElementById('receipt-order-id').textContent = orderId;

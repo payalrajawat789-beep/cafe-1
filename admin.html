@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard | Brew & Bliss Café</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+  <style>
+    :root {
+      --bg-dark:      #0d0a07;
+      --bg-card:      #141008;
+      --bg-section:   #100d08;
+      --coffee-deep:  #3b1f0a;
+      --coffee-mid:   #6b3a1f;
+      --coffee-light: #a0622a;
+      --gold:         #c9974a;
+      --gold-light:   #e8c46a;
+      --cream:        #f5ede0;
+      --cream-dim:    #c8b89e;
+      --white:        #ffffff;
+      --text-main:    #e8ddd0;
+      --text-muted:   #9a8a78;
+      --glass-bg:     rgba(255, 255, 255, 0.04);
+      --glass-border: rgba(201, 151, 74, 0.18);
+      --shadow-gold:  0 8px 40px rgba(201, 151, 74, 0.18);
+      --shadow-dark:  0 20px 60px rgba(0, 0, 0, 0.6);
+      --radius:       16px;
+      --transition:   0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: var(--bg-dark);
+      color: var(--text-main);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    .container {
+      width: 95%;
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 2rem 0;
+    }
+
+    /* Glass Card helper */
+    .glass-card {
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius);
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.6rem 1.4rem;
+      border-radius: 50px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: var(--transition);
+      cursor: pointer;
+      border: none;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--coffee-mid), var(--gold));
+      color: var(--white);
+    }
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      filter: brightness(1.1);
+    }
+    .btn-outline {
+      border: 1px solid var(--gold);
+      color: var(--gold);
+      background: transparent;
+    }
+    .btn-outline:hover {
+      background: var(--gold);
+      color: var(--bg-dark);
+    }
+
+    /* Status Badges */
+    .status-badge {
+      padding: 0.25rem 0.75rem;
+      border-radius: 50px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    .status-pending { background: rgba(242, 201, 76, 0.15); color: #f2c94c; }
+    .status-approved, .status-completed, .status-paid { background: rgba(39, 174, 96, 0.15); color: #27ae60; }
+    .status-cancelled { background: rgba(235, 87, 87, 0.15); color: #eb5757; }
+
+    /* ============================================================ LOGIN WRAPPER */
+    #login-wrapper {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 1.5rem;
+    }
+
+    .login-box {
+      width: 100%;
+      max-width: 420px;
+      padding: 3rem 2.5rem;
+      text-align: center;
+    }
+
+    .login-logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 2rem;
+      color: var(--cream);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.6rem;
+      margin-bottom: 2rem;
+    }
+
+    .form-group {
+      text-align: left;
+      margin-bottom: 1.2rem;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.8rem;
+      color: var(--cream-dim);
+      margin-bottom: 0.4rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .form-group input {
+      width: 100%;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid var(--glass-border);
+      padding: 0.8rem 1rem;
+      border-radius: 8px;
+      color: var(--cream);
+      outline: none;
+      transition: var(--transition);
+    }
+
+    .form-group input:focus {
+      border-color: var(--gold);
+      background: rgba(201,151,74,0.05);
+    }
+
+    #login-error {
+      color: #ff6b6b;
+      font-size: 0.85rem;
+      margin-bottom: 1rem;
+      min-height: 1.2em;
+    }
+
+    /* ============================================================ DASHBOARD WRAPPER */
+    #dashboard-wrapper {
+      display: none;
+    }
+
+    /* Header */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid var(--glass-border);
+      margin-bottom: 2rem;
+    }
+
+    .logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--cream);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-card {
+      padding: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1.2rem;
+    }
+
+    .stat-icon {
+      width: 50px;
+      height: 50px;
+      border-radius: 12px;
+      background: rgba(201, 151, 74, 0.1);
+      color: var(--gold);
+      display: grid;
+      place-items: center;
+      font-size: 1.3rem;
+    }
+
+    .stat-info h3 {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+    }
+
+    .stat-info p {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--cream);
+      font-family: 'Playfair Display', serif;
+    }
+
+    /* Dashboard Layout */
+    .dashboard-layout {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      gap: 2rem;
+      align-items: start;
+    }
+
+    /* Sidebar Navigation */
+    .sidebar {
+      padding: 1.5rem 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .sidebar-btn {
+      width: 100%;
+      text-align: left;
+      padding: 0.8rem 1.2rem;
+      border-radius: 8px;
+      color: var(--cream-dim);
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      transition: var(--transition);
+    }
+
+    .sidebar-btn:hover, .sidebar-btn.active {
+      background: linear-gradient(135deg, var(--coffee-mid), var(--gold));
+      color: var(--white);
+    }
+
+    /* Tables & Content Panel */
+    .content-panel {
+      padding: 2rem;
+      min-height: 500px;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .panel-header h2 {
+      font-family: 'Playfair Display', serif;
+      color: var(--cream);
+    }
+
+    .table-container {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+    }
+
+    th, td {
+      padding: 1rem 1.2rem;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      font-size: 0.9rem;
+    }
+
+    th {
+      color: var(--gold);
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      letter-spacing: 0.05em;
+    }
+
+    td {
+      color: var(--text-main);
+    }
+
+    tr:hover td {
+      background: rgba(255, 255, 255, 0.01);
+    }
+
+    .action-group {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .action-btn {
+      padding: 0.35rem 0.7rem;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: var(--transition);
+    }
+
+    .btn-approve { background: #27ae60; color: white; }
+    .btn-approve:hover { background: #219653; }
+    .btn-cancel { background: #eb5757; color: white; }
+    .btn-cancel:hover { background: #c0392b; }
+
+    .items-list {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .dashboard-layout { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 600px) {
+      .stats-grid { grid-template-columns: 1fr; }
+      header { flex-direction: column; gap: 1rem; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ============================================================ ADMIN LOGIN SCREEN -->
+  <div id="login-wrapper">
+    <div class="login-box glass-card">
+      <div class="login-logo">
+        <i class="fa-solid fa-mug-hot"></i> Brew & Bliss Admin
+      </div>
+      <form id="admin-login-form">
+        <div class="form-group">
+          <label for="username">Username</label>
+          <input type="text" id="username" required autocomplete="username" />
+        </div>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" required autocomplete="current-password" />
+        </div>
+        <div id="login-error"></div>
+        <button type="submit" class="btn btn-primary btn-full" style="width: 100%; justify-content: center;">
+          <i class="fa-solid fa-right-to-bracket"></i> Login
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ============================================================ DASHBOARD PANEL -->
+  <div id="dashboard-wrapper" class="container">
+    <header>
+      <div class="logo">
+        <i class="fa-solid fa-mug-hot"></i> Brew & Bliss <span class="gold">Admin Panel</span>
+      </div>
+      <div style="display: flex; gap: 1rem; align-items: center;">
+        <button class="btn btn-outline" id="refresh-btn"><i class="fa-solid fa-rotate"></i> Refresh</button>
+        <button class="btn btn-primary" id="logout-btn"><i class="fa-solid fa-right-from-bracket"></i> Logout</button>
+      </div>
+    </header>
+
+    <!-- Stats summary grid -->
+    <div class="stats-grid">
+      <div class="stat-card glass-card">
+        <div class="stat-icon"><i class="fa-solid fa-indian-rupee-sign"></i></div>
+        <div class="stat-info">
+          <h3>Total Revenue</h3>
+          <p id="stat-revenue">₹0</p>
+        </div>
+      </div>
+      <div class="stat-card glass-card">
+        <div class="stat-icon"><i class="fa-solid fa-receipt"></i></div>
+        <div class="stat-info">
+          <h3>Total Orders</h3>
+          <p id="stat-orders">0</p>
+        </div>
+      </div>
+      <div class="stat-card glass-card">
+        <div class="stat-icon"><i class="fa-solid fa-calendar-check"></i></div>
+        <div class="stat-info">
+          <h3>Bookings</h3>
+          <p id="stat-bookings">0</p>
+        </div>
+      </div>
+      <div class="stat-card glass-card">
+        <div class="stat-icon"><i class="fa-solid fa-envelope-open-text"></i></div>
+        <div class="stat-info">
+          <h3>Newsletter</h3>
+          <p id="stat-newsletter">0</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Dashboard Split Screen -->
+    <div class="dashboard-layout">
+      <!-- Sidebar navigation -->
+      <aside class="glass-card sidebar">
+        <button class="sidebar-btn active" data-panel="orders-panel">
+          <i class="fa-solid fa-cart-shopping"></i> Orders
+        </button>
+        <button class="sidebar-btn" data-panel="bookings-panel">
+          <i class="fa-solid fa-calendar-days"></i> Reservations
+        </button>
+        <button class="sidebar-btn" data-panel="newsletter-panel">
+          <i class="fa-solid fa-paper-plane"></i> Subscribers
+        </button>
+      </aside>
+
+      <!-- Content Panels -->
+      <main class="glass-card content-panel">
+        
+        <!-- 1. Orders Panel -->
+        <div id="orders-panel" class="panel-content" style="display: block;">
+          <div class="panel-header">
+            <h2>Customer Orders</h2>
+          </div>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Order ID</th>
+                  <th>Table</th>
+                  <th>Items Details</th>
+                  <th>Total</th>
+                  <th>Method</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="orders-table-body">
+                <tr><td colspan="7" class="text-center">Loading orders...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 2. Bookings Panel -->
+        <div id="bookings-panel" class="panel-content" style="display: none;">
+          <div class="panel-header">
+            <h2>Table Reservations</h2>
+          </div>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Name</th>
+                  <th>Guests</th>
+                  <th>Date & Time</th>
+                  <th>Contact Details</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="bookings-table-body">
+                <tr><td colspan="7" class="text-center">Loading reservations...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 3. Newsletter Subscribers -->
+        <div id="newsletter-panel" class="panel-content" style="display: none;">
+          <div class="panel-header">
+            <h2>Newsletter Subscribers</h2>
+          </div>
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Email</th>
+                  <th>Subscribed Date</th>
+                </tr>
+              </thead>
+              <tbody id="newsletter-table-body">
+                <tr><td colspan="3" class="text-center">Loading subscribers...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- Dashboard Logic script -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const loginWrapper = document.getElementById('login-wrapper');
+      const dashboardWrapper = document.getElementById('dashboard-wrapper');
+      const loginForm = document.getElementById('admin-login-form');
+      const loginError = document.getElementById('login-error');
+      
+      const token = sessionStorage.getItem('bb_admin_token');
+      if (token) {
+        showDashboard();
+      }
+
+      // Login form handler
+      loginForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value;
+
+        loginError.textContent = 'Authenticating...';
+
+        try {
+          const response = await fetch('/api/admin-login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+          });
+          const data = await response.json();
+          if (data.success && data.token) {
+            sessionStorage.setItem('bb_admin_token', data.token);
+            showDashboard();
+          } else {
+            loginError.textContent = data.message || 'Login failed';
+          }
+        } catch (error) {
+          loginError.textContent = 'Server connection error';
+        }
+      });
+
+      // Sidebar switcher
+      document.querySelectorAll('.sidebar-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+          document.querySelectorAll('.sidebar-btn').forEach(b => b.classList.remove('active'));
+          this.classList.add('active');
+
+          const targetPanel = this.dataset.panel;
+          document.querySelectorAll('.panel-content').forEach(p => p.style.display = 'none');
+          document.getElementById(targetPanel).style.display = 'block';
+        });
+      });
+
+      // Logout handler
+      document.getElementById('logout-btn').addEventListener('click', () => {
+        sessionStorage.removeItem('bb_admin_token');
+        window.location.reload();
+      });
+
+      // Refresh handler
+      document.getElementById('refresh-btn').addEventListener('click', loadDashboardData);
+
+      function showDashboard() {
+        loginWrapper.style.display = 'none';
+        dashboardWrapper.style.display = 'block';
+        loadDashboardData();
+      }
+
+      // Fetch dynamic dashboard listings
+      async function loadDashboardData() {
+        const authToken = sessionStorage.getItem('bb_admin_token');
+        if (!authToken) return;
+
+        try {
+          const response = await fetch('/api/admin-data', {
+            headers: { 'Authorization': `Bearer ${authToken}` }
+          });
+          
+          if (response.status === 401) {
+            // Unauthorized
+            sessionStorage.removeItem('bb_admin_token');
+            window.location.reload();
+            return;
+          }
+
+          const data = await response.json();
+          if (data.success) {
+            // Fill stats
+            document.getElementById('stat-revenue').textContent = `₹${data.stats.totalRevenue}`;
+            document.getElementById('stat-orders').textContent = data.stats.totalOrders;
+            document.getElementById('stat-bookings').textContent = data.stats.totalBookings;
+            document.getElementById('stat-newsletter').textContent = data.stats.totalSubscribers;
+
+            // Fill Orders table
+            renderOrdersTable(data.orders);
+            // Fill Reservations table
+            renderBookingsTable(data.reservations);
+            // Fill Subscribers table
+            renderSubscribersTable(data.subscribers);
+          }
+        } catch (error) {
+          console.error('Error fetching admin data:', error);
+        }
+      }
+
+      function renderOrdersTable(orders) {
+        const tbody = document.getElementById('orders-table-body');
+        if (orders.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="7" class="text-center">No orders found.</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = '';
+        orders.forEach(order => {
+          // Parse JSON list items
+          let itemsListHtml = '';
+          try {
+            const items = typeof order.items === 'string' ? JSON.parse(order.items) : order.items;
+            itemsListHtml = items.map(i => `${i.name} (${i.qty})`).join(', ');
+          } catch(e) {
+            itemsListHtml = 'Invalid items format';
+          }
+
+          const tr = document.createElement('tr');
+          
+          // Action Buttons based on status
+          let actionButtons = '';
+          if (order.status === 'pending') {
+            actionButtons = `
+              <div class="action-group">
+                <button class="action-btn btn-approve" onclick="updateStatus('order', ${order.id}, 'completed')">Complete</button>
+                <button class="action-btn btn-cancel" onclick="updateStatus('order', ${order.id}, 'cancelled')">Cancel</button>
+              </div>
+            `;
+          } else {
+            actionButtons = `<span style="color: var(--text-muted)">No actions available</span>`;
+          }
+
+          tr.innerHTML = `
+            <td><strong>#BB-${order.id}</strong></td>
+            <td>${order.table_num}</td>
+            <td class="items-list">${itemsListHtml}</td>
+            <td class="gold">₹${order.total}</td>
+            <td>${order.payment_method}</td>
+            <td><span class="status-badge status-${order.status}">${order.status}</span></td>
+            <td>${actionButtons}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+
+      function renderBookingsTable(bookings) {
+        const tbody = document.getElementById('bookings-table-body');
+        if (bookings.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="7" class="text-center">No reservations found.</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = '';
+        bookings.forEach(booking => {
+          const formattedDate = new Date(booking.date).toLocaleDateString();
+          const tr = document.createElement('tr');
+          
+          // Actions
+          let actionButtons = '';
+          if (booking.status === 'pending') {
+            actionButtons = `
+              <div class="action-group">
+                <button class="action-btn btn-approve" onclick="updateStatus('reservation', ${booking.id}, 'approved')">Approve</button>
+                <button class="action-btn btn-cancel" onclick="updateStatus('reservation', ${booking.id}, 'cancelled')">Cancel</button>
+              </div>
+            `;
+          } else {
+            actionButtons = `<span style="color: var(--text-muted)">Completed</span>`;
+          }
+
+          tr.innerHTML = `
+            <td><strong>#${booking.id}</strong></td>
+            <td>${booking.name}</td>
+            <td>${booking.guests} Guests</td>
+            <td>${formattedDate} at ${booking.time}</td>
+            <td>
+              <div>Phone: ${booking.phone}</div>
+              <div style="font-size:0.75rem; color: var(--text-muted)">${booking.email}</div>
+            </td>
+            <td><span class="status-badge status-${booking.status}">${booking.status}</span></td>
+            <td>${actionButtons}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+
+      function renderSubscribersTable(subscribers) {
+        const tbody = document.getElementById('newsletter-table-body');
+        if (subscribers.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="3" class="text-center">No subscribers yet.</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = '';
+        subscribers.forEach(sub => {
+          const formattedDate = new Date(sub.subscribed_at).toLocaleDateString();
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>#${sub.id}</td>
+            <td><strong>${sub.email}</strong></td>
+            <td>${formattedDate}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+
+      // Update statuses API caller
+      async function updateStatus(type, id, status) {
+        const authToken = sessionStorage.getItem('bb_admin_token');
+        if (!authToken) return;
+
+        if (!confirm(`Are you sure you want to change status to ${status}?`)) return;
+
+        try {
+          const response = await fetch('/api/admin-data', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${authToken}`
+            },
+            body: JSON.stringify({ type, id, status })
+          });
+          const data = await response.json();
+          if (data.success) {
+            loadDashboardData();
+          } else {
+            alert('Failed: ' + data.message);
+          }
+        } catch (error) {
+          alert('Server connection error');
+        }
+      }
+
+      // Bind updateStatus globally
+      window.updateStatus = updateStatus;
+    });
+  </script>
+</body>
+</html>

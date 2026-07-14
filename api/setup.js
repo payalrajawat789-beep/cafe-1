@@ -50,10 +50,25 @@ module.exports = async (req, res) => {
       );
     `);
 
+    // Create orders table
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS orders (
+        id          SERIAL PRIMARY KEY,
+        table_num   VARCHAR(20)  NOT NULL,
+        items       JSONB        NOT NULL,
+        subtotal    INTEGER      NOT NULL,
+        tax         INTEGER      NOT NULL,
+        total       INTEGER      NOT NULL,
+        payment_method VARCHAR(50) NOT NULL,
+        status      VARCHAR(20)  DEFAULT 'pending',
+        created_at  TIMESTAMP    DEFAULT NOW()
+      );
+    `);
+
     res.status(200).json({
       success: true,
       message: '✅ Database tables created successfully!',
-      tables: ['reservations', 'newsletter', 'contact_messages']
+      tables: ['reservations', 'newsletter', 'contact_messages', 'orders']
     });
 
   } catch (error) {
