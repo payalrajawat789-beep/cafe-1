@@ -1,0 +1,20 @@
+{
+  "name": "brew-and-bliss-cafe",
+  "version": "1.0.0",
+  "description": "Brew & Bliss Café – Premium Café Website with Neon PostgreSQL backend",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "echo 'Static site - no build needed'",
+    "start": "vercel dev"
+  },
+  "dependencies": {
+    "pg": "^8.11.3"
+  },
+  "engines": {
+    "node": ">=18.x"
+  },
+  "keywords": ["cafe", "restaurant", "vercel", "neon", "postgresql"],
+  "author": "Brew & Bliss Café",
+  "license": "MIT"
+}
